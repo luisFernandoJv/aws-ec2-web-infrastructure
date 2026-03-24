@@ -1,53 +1,181 @@
-# ☁️ AWS Systems Manager: Fleet Management & Automation
+# ☁️ AWS S3 Static Website Deployment
 
-Este repositório contém o registro prático de operações de gerenciamento de infraestrutura em escala utilizando o **AWS Systems Manager (SSM)**. O foco do projeto é a automação de tarefas operacionais, gerenciamento de configurações e acesso seguro a instâncias EC2 sem a necessidade de chaves SSH ou portas abertas.
+> **Hands-on cloud project** — Deploying a static website on Amazon S3 using AWS CLI, IAM, and Bash scripting.
 
-> "Na engenharia, a automação não é apenas sobre velocidade, mas sobre consistência e segurança. Este laboratório demonstra como gerenciar frotas de servidores de forma centralizada e auditável."
-
----
-
-## 🎯 Objetivos do Projeto
-
-- [x] **Inventário Automatizado:** Coleta de metadados e software instalado via Fleet Manager.
-- [x] **Execução de Comandos em Escala:** Deploy de aplicação web (Apache/PHP) utilizando Run Command.
-- [x] **Externalização de Configurações:** Uso do Parameter Store para _Feature Toggles_.
-- [x] **Acesso Seguro (Zero Trust):** Gerenciamento de instâncias via Session Manager (sem porta 22).
+![AWS](https://img.shields.io/badge/AWS-S3-FF9900?style=flat-square&logo=amazonaws&logoColor=white)
+![CLI](https://img.shields.io/badge/AWS_CLI-Configured-232F3E?style=flat-square&logo=amazonaws&logoColor=white)
+![IAM](https://img.shields.io/badge/IAM-User_&_Policies-DD344C?style=flat-square&logo=amazonaws&logoColor=white)
+![Bash](https://img.shields.io/badge/Bash-Scripted-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Completed-success?style=flat-square)
 
 ---
 
-## 🏗️ Arquitetura das Soluções
+## 📌 Overview
 
-### 1. Instalação via Run Command
+This project demonstrates a **real-world cloud deployment pipeline** using Amazon Web Services. A static website for a _Café & Bakery_ was hosted on Amazon S3, with all infrastructure configured entirely through the **AWS CLI** — simulating an automated DevOps workflow.
 
-Utilização de documentos do SSM para instalar o servidor Apache, PHP e o SDK da AWS de forma remota e simultânea.
-![Run Command Architecture](./diagrams/image_d4f6c0.png)
-
-### 2. Acesso via Session Manager
-
-Substituição do SSH tradicional por sessões autenticadas via IAM, garantindo auditoria total via CloudTrail.
-![Session Manager Architecture](./diagrams/image_d4f6c7.png)
+The project covers IAM user management, bucket permissions, static hosting configuration, and deployment automation using Bash scripts.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🏗️ Architecture
 
-- **AWS Systems Manager:** Fleet Manager, Run Command, Parameter Store, Session Manager.
-- **Amazon EC2:** Instâncias Linux gerenciadas.
-- **AWS CLI:** Consultas de metadados e recursos via terminal.
-- **Apache & PHP:** Stack da aplicação instalada.
+![architecture](./diagrams/architecture-diagram.png)
+
+> The diagram above shows the full flow: AWS Management Console + AWS CLI → file upload to S3 bucket → publicly accessible website via S3 static hosting endpoint.
 
 ---
 
-## 📝 Comandos Executados no Terminal (Session Manager)
+## 🚀 Technologies Used
 
-Durante o acesso direto à instância, foram validadas as permissões de IAM e o deploy da aplicação:
+| Technology                | Purpose                                 |
+| ------------------------- | --------------------------------------- |
+| **Amazon S3**             | Static website hosting                  |
+| **AWS CLI**               | Infrastructure as code                  |
+| **IAM**                   | User creation & permission management   |
+| **EC2 (Session Manager)** | Remote terminal via AWS Systems Manager |
+| **Bash**                  | Deployment automation script            |
+
+---
+
+## ⚙️ Steps Performed
+
+### 1. Configured AWS CLI on EC2
 
 ```bash
-# Verificação dos arquivos da aplicação instalada
-ls /var/www/html
-
-# Consulta dinâmica de metadados da instância (Região e Detalhes)
-AZ=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
-export AWS_DEFAULT_REGION=${AZ::-1}
-aws ec2 describe-instances
+aws configure
+# AWS Access Key ID, Secret Key, Region: us-west-2, Output: json
 ```
+
+### 2. Created S3 Bucket via CLI
+
+```bash
+aws s3api create-bucket \
+  --bucket luis-alexandre-cafe-2026 \
+  --region us-west-2 \
+  --create-bucket-configuration LocationConstraint=us-west-2
+```
+
+### 3. Created IAM User with S3 Full Access
+
+```bash
+aws iam create-user --user-name awsS3user
+aws iam create-login-profile --user-name awsS3user --password Training123!
+aws iam attach-user-policy \
+  --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess \
+  --user-name awsS3user
+```
+
+### 4. Enabled Static Website Hosting
+
+```bash
+aws s3 website s3://luis-alexandre-cafe-2026/ --index-document index.html
+```
+
+### 5. Uploaded Files with Public Read ACL
+
+```bash
+aws s3 cp /home/ec2-user/sysops-activity-files/static-website/ \
+  s3://luis-alexandre-cafe-2026/ \
+  --recursive \
+  --acl public-read
+```
+
+### 6. Automated Deployment with Bash Script
+
+```bash
+#!/bin/bash
+aws s3 sync /home/ec2-user/sysops-activity-files/static-website/ \
+  s3://luis-alexandre-cafe-2026/ \
+  --acl public-read
+```
+
+> **Optimization**: Replaced `aws s3 cp` with `aws s3 sync` — only modified files are uploaded, reducing transfer time and resource consumption.
+
+---
+
+## 📂 Repository Structure
+
+```
+aws-s3-static-website-deployment/
+│
+├── scripts/
+│   └── update-website.sh
+│
+├── screenshots/
+│   ├── s3-bucket-created.png
+│   ├── static-hosting-enabled.png
+│   ├── cli-upload.png
+│   ├── website-live.png
+│   └── architecture-diagram.png
+│
+└── README.md
+```
+
+---
+
+## 🌐 Live Result
+
+The website was successfully deployed and made publicly accessible via the S3 static website endpoint:
+
+```
+http://luis-alexandre-cafe-2026.s3-website-us-west-2.amazonaws.com
+```
+
+---
+
+## 📸 Screenshots
+
+### S3 Bucket Created
+
+![bucket](./screenshots/s3-bucket-created.png)
+
+> AWS S3 console showing the bucket `luis-alexandre-cafe-2026` created in the us-west-2 (Oregon) region on March 23, 2026.
+
+---
+
+### Static Website Hosting Enabled
+
+![hosting](./screenshots/static-hosting-enabled.png)
+
+> Static website hosting successfully activated on the S3 bucket, displaying the automatically generated public endpoint.
+
+---
+
+### CLI Upload in Action
+
+![cli](./screenshots/cli-upload.png)
+
+> SSH terminal via AWS Systems Manager showing the upload of all website files (HTML, CSS and images) to the S3 bucket using `aws s3 cp` with `--recursive` and `--acl public-read` flags.
+
+---
+
+### Website Live
+
+![site](./screenshots/website-live.png)
+
+> The Café & Bakery website live and publicly accessible via the S3 endpoint (`luis-alexandre-cafe-2026.s3-website-us-west-2.amazonaws.com`).
+
+---
+
+## 💡 Key Learnings
+
+- **AWS CLI proficiency** — managing cloud resources without touching the AWS Console
+- **IAM best practices** — creating scoped users with specific service policies
+- **Static hosting on S3** — enabling web hosting, configuring public ACLs, and verifying endpoint
+- **Deployment automation** — writing reusable Bash scripts for repeatable deploys
+- **`cp` vs `sync`** — understanding the efficiency difference between full upload vs incremental sync
+
+---
+
+## 👤 Author
+
+**Luís Fernando Alexandre dos Santos**  
+Cloud & Backend Developer | AWS Practitioner
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/luisfernando-eng)
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat-square&logo=github)](https://github.com/luisFernandoJv)
+
+---
+
+> _This project was developed as part of an AWS SysOps hands-on lab, simulating a real-world cloud deployment scenario._
