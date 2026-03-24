@@ -1,53 +1,53 @@
-# ☁️ AWS S3 Static Website Deployment
+# ☁️ Deploy de Site Estático na AWS com S3 + CLI
 
-> **Hands-on cloud project** — Deploying a static website on Amazon S3 using AWS CLI, IAM, and Bash scripting.
+> Projeto prático de Cloud Computing — infraestrutura configurada 100% via AWS CLI, sem tocar no console gráfico.
 
 ![AWS](https://img.shields.io/badge/AWS-S3-FF9900?style=flat-square&logo=amazonaws&logoColor=white)
-![CLI](https://img.shields.io/badge/AWS_CLI-Configured-232F3E?style=flat-square&logo=amazonaws&logoColor=white)
-![IAM](https://img.shields.io/badge/IAM-User_&_Policies-DD344C?style=flat-square&logo=amazonaws&logoColor=white)
-![Bash](https://img.shields.io/badge/Bash-Scripted-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Completed-success?style=flat-square)
+![CLI](https://img.shields.io/badge/AWS_CLI-Configurado-232F3E?style=flat-square&logo=amazonaws&logoColor=white)
+![IAM](https://img.shields.io/badge/IAM-Usuário_%26_Políticas-DD344C?style=flat-square&logo=amazonaws&logoColor=white)
+![Bash](https://img.shields.io/badge/Bash-Script_de_Deploy-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Concluído-success?style=flat-square)
 
 ---
 
-## 📌 Overview
+## O que foi feito
 
-This project demonstrates a **real-world cloud deployment pipeline** using Amazon Web Services. A static website for a _Café & Bakery_ was hosted on Amazon S3, with all infrastructure configured entirely through the **AWS CLI** — simulating an automated DevOps workflow.
+Um site estático foi hospedado no **Amazon S3** com acesso público, usando apenas a **AWS CLI** a partir de uma instância EC2 — sem interface gráfica, sem atalhos.
 
-The project covers IAM user management, bucket permissions, static hosting configuration, and deployment automation using Bash scripts.
-
----
-
-## 🏗️ Architecture
-
-![architecture](./diagrams/architecture-diagram.png)
-
-> The diagram above shows the full flow: AWS Management Console + AWS CLI → file upload to S3 bucket → publicly accessible website via S3 static hosting endpoint.
+O projeto cobre criação de bucket, gerenciamento de permissões com IAM, configuração de hospedagem estática e automação do deploy com script Bash.
 
 ---
 
-## 🚀 Technologies Used
+## Arquitetura
 
-| Technology                | Purpose                                 |
-| ------------------------- | --------------------------------------- |
-| **Amazon S3**             | Static website hosting                  |
-| **AWS CLI**               | Infrastructure as code                  |
-| **IAM**                   | User creation & permission management   |
-| **EC2 (Session Manager)** | Remote terminal via AWS Systems Manager |
-| **Bash**                  | Deployment automation script            |
+![architecture](./screenshots/architecture-diagram.png)
+
+> Fluxo completo: EC2 via Session Manager → AWS CLI → upload para bucket S3 → site acessível publicamente via endpoint S3.
 
 ---
 
-## ⚙️ Steps Performed
+## Tecnologias
 
-### 1. Configured AWS CLI on EC2
+| Serviço / Ferramenta      | Uso no projeto                                              |
+| ------------------------- | ----------------------------------------------------------- |
+| **Amazon S3**             | Hospedagem do site estático                                 |
+| **AWS CLI**               | Toda a infraestrutura como código                           |
+| **IAM**                   | Criação de usuário e anexo de política `AmazonS3FullAccess` |
+| **EC2 + Session Manager** | Terminal remoto sem necessidade de SSH key                  |
+| **Bash**                  | Script de deploy automatizado                               |
+
+---
+
+## Passo a passo técnico
+
+### 1. Configuração da AWS CLI
 
 ```bash
 aws configure
-# AWS Access Key ID, Secret Key, Region: us-west-2, Output: json
+# Região: us-west-2 | Formato: json
 ```
 
-### 2. Created S3 Bucket via CLI
+### 2. Criação do bucket S3
 
 ```bash
 aws s3api create-bucket \
@@ -56,23 +56,23 @@ aws s3api create-bucket \
   --create-bucket-configuration LocationConstraint=us-west-2
 ```
 
-### 3. Created IAM User with S3 Full Access
+### 3. Criação de usuário IAM com acesso ao S3
 
 ```bash
 aws iam create-user --user-name awsS3user
-aws iam create-login-profile --user-name awsS3user --password Training123!
+
 aws iam attach-user-policy \
   --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess \
   --user-name awsS3user
 ```
 
-### 4. Enabled Static Website Hosting
+### 4. Ativação de hospedagem estática
 
 ```bash
 aws s3 website s3://luis-alexandre-cafe-2026/ --index-document index.html
 ```
 
-### 5. Uploaded Files with Public Read ACL
+### 5. Upload dos arquivos com permissão pública
 
 ```bash
 aws s3 cp /home/ec2-user/sysops-activity-files/static-website/ \
@@ -81,7 +81,7 @@ aws s3 cp /home/ec2-user/sysops-activity-files/static-website/ \
   --acl public-read
 ```
 
-### 6. Automated Deployment with Bash Script
+### 6. Script de deploy automatizado
 
 ```bash
 #!/bin/bash
@@ -90,17 +90,17 @@ aws s3 sync /home/ec2-user/sysops-activity-files/static-website/ \
   --acl public-read
 ```
 
-> **Optimization**: Replaced `aws s3 cp` with `aws s3 sync` — only modified files are uploaded, reducing transfer time and resource consumption.
+> O `aws s3 sync` substitui o `aws s3 cp` — envia **somente os arquivos modificados**, tornando o deploy mais rápido e econômico.
 
 ---
 
-## 📂 Repository Structure
+## Estrutura do repositório
 
 ```
 aws-s3-static-website-deployment/
 │
 ├── scripts/
-│   └── update-website.sh
+│   └── update-website.sh       # script de deploy
 │
 ├── screenshots/
 │   ├── s3-bucket-created.png
@@ -114,9 +114,9 @@ aws-s3-static-website-deployment/
 
 ---
 
-## 🌐 Live Result
+## Resultado
 
-The website was successfully deployed and made publicly accessible via the S3 static website endpoint:
+Site publicado e acessível publicamente:
 
 ```
 http://luis-alexandre-cafe-2026.s3-website-us-west-2.amazonaws.com
@@ -124,58 +124,58 @@ http://luis-alexandre-cafe-2026.s3-website-us-west-2.amazonaws.com
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
-### S3 Bucket Created
+### Bucket criado no S3
 
 ![bucket](./screenshots/s3-bucket-created.png)
 
-> AWS S3 console showing the bucket `luis-alexandre-cafe-2026` created in the us-west-2 (Oregon) region on March 23, 2026.
+> Bucket `luis-alexandre-cafe-2026` criado via CLI na região us-west-2 (Oregon).
 
 ---
 
-### Static Website Hosting Enabled
+### Hospedagem estática ativada
 
 ![hosting](./screenshots/static-hosting-enabled.png)
 
-> Static website hosting successfully activated on the S3 bucket, displaying the automatically generated public endpoint.
+> Painel do S3 confirmando a hospedagem estática habilitada e o endpoint público gerado.
 
 ---
 
-### CLI Upload in Action
+### Upload via CLI em execução
 
 ![cli](./screenshots/cli-upload.png)
 
-> SSH terminal via AWS Systems Manager showing the upload of all website files (HTML, CSS and images) to the S3 bucket using `aws s3 cp` with `--recursive` and `--acl public-read` flags.
+> Terminal SSH no Session Manager exibindo o upload recursivo dos arquivos do site para o bucket S3.
 
 ---
 
-### Website Live
+### Site no ar
 
 ![site](./screenshots/website-live.png)
 
-> The Café & Bakery website live and publicly accessible via the S3 endpoint (`luis-alexandre-cafe-2026.s3-website-us-west-2.amazonaws.com`).
+> Página do Café & Bakery acessível publicamente via endpoint S3.
 
 ---
 
-## 💡 Key Learnings
+## O que aprendi na prática
 
-- **AWS CLI proficiency** — managing cloud resources without touching the AWS Console
-- **IAM best practices** — creating scoped users with specific service policies
-- **Static hosting on S3** — enabling web hosting, configuring public ACLs, and verifying endpoint
-- **Deployment automation** — writing reusable Bash scripts for repeatable deploys
-- **`cp` vs `sync`** — understanding the efficiency difference between full upload vs incremental sync
+- Operar a AWS sem depender do console gráfico — só CLI
+- Criar e gerenciar usuários IAM com políticas específicas por serviço
+- Configurar hospedagem estática no S3 e entender o fluxo de permissões públicas (ACL)
+- Automatizar deploys com Bash e entender a diferença real entre `cp` e `sync`
+- Usar o Session Manager para acessar EC2 sem chave SSH
 
 ---
 
-## 👤 Author
+## Autor
 
 **Luís Fernando Alexandre dos Santos**  
-Cloud & Backend Developer | AWS Practitioner
+Desenvolvedor | Estudante de Cloud Computing
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/luisfernando-eng)
-[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat-square&logo=github)](https://github.com/luisFernandoJv)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Conectar-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/luisfernando-eng)
+[![GitHub](https://img.shields.io/badge/GitHub-Seguir-181717?style=flat-square&logo=github)](https://github.com/luisFernandoJv)
 
 ---
 
-> _This project was developed as part of an AWS SysOps hands-on lab, simulating a real-world cloud deployment scenario._
+> _Projeto desenvolvido como parte de um laboratório prático AWS SysOps, simulando um pipeline real de deploy em nuvem._
