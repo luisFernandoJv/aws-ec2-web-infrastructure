@@ -1,181 +1,81 @@
-# ☁️ Deploy de Site Estático na AWS com S3 + CLI
+# AWS Infrastructure: EC2 Bastion Host & CLI Automation 🚀
 
-> Projeto prático de Cloud Computing — infraestrutura configurada 100% via AWS CLI, sem tocar no console gráfico.
+[![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://www.linux.org/)
 
-![AWS](https://img.shields.io/badge/AWS-S3-FF9900?style=flat-square&logo=amazonaws&logoColor=white)
-![CLI](https://img.shields.io/badge/AWS_CLI-Configurado-232F3E?style=flat-square&logo=amazonaws&logoColor=white)
-![IAM](https://img.shields.io/badge/IAM-Usuário_%26_Políticas-DD344C?style=flat-square&logo=amazonaws&logoColor=white)
-![Bash](https://img.shields.io/badge/Bash-Script_de_Deploy-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Concluído-success?style=flat-square)
+Este projeto demonstra o provisionamento de uma arquitetura de rede segura na AWS, utilizando uma instância **Bastion Host** para gerenciar de forma segura o lançamento de um **Servidor Web** via **AWS CLI**.
 
----
+## 📌 Visão Geral
 
-## O que foi feito
+A arquitetura foi desenhada para separar as responsabilidades de gerenciamento e entrega de aplicação. O Bastion Host atua como o ponto de entrada administrativo, permitindo automação programática dentro do ambiente cloud sem expor diretamente as APIs de controle à internet aberta.
 
-Um site estático foi hospedado no **Amazon S3** com acesso público, usando apenas a **AWS CLI** a partir de uma instância EC2 — sem interface gráfica, sem atalhos.
+### 🎯 Objetivos Concluídos
 
-O projeto cobre criação de bucket, gerenciamento de permissões com IAM, configuração de hospedagem estática e automação do deploy com script Bash.
-
----
-
-## Arquitetura
-
-![architecture](./diagrams/architecture-diagram.png)
-
-> Fluxo completo: EC2 via Session Manager → AWS CLI → upload para bucket S3 → site acessível publicamente via endpoint S3.
+- **Provisionamento Híbrido:** Uso do AWS Management Console (Manual) e AWS CLI (Automatizado).
+- **Segurança de Rede:** Configuração de VPC, Subnets Públicas e Grupos de Segurança específicos.
+- **Gestão de Identidade:** Utilização de instâncias com perfis IAM (Roles) para acesso seguro a serviços AWS (Systems Manager).
+- **Automação de Boot:** Uso de **User Data Scripts** para instalação e configuração automática do Apache (httpd).
 
 ---
 
-## Tecnologias
+## 🏗️ Arquitetura do Projeto
 
-| Serviço / Ferramenta      | Uso no projeto                                              |
-| ------------------------- | ----------------------------------------------------------- |
-| **Amazon S3**             | Hospedagem do site estático                                 |
-| **AWS CLI**               | Toda a infraestrutura como código                           |
-| **IAM**                   | Criação de usuário e anexo de política `AmazonS3FullAccess` |
-| **EC2 + Session Manager** | Terminal remoto sem necessidade de SSH key                  |
-| **Bash**                  | Script de deploy automatizado                               |
+Abaixo, o diagrama que representa a topologia da rede e o fluxo de lançamento das instâncias:
+
+![Diagrama de Arquitetura](./diagrams/01-architecture-diagram.png)
 
 ---
 
-## Passo a passo técnico
+## 🛠️ Tecnologias e Ferramentas
 
-### 1. Configuração da AWS CLI
-
-```bash
-aws configure
-# Região: us-west-2 | Formato: json
-```
-
-### 2. Criação do bucket S3
-
-```bash
-aws s3api create-bucket \
-  --bucket luis-alexandre-cafe-2026 \
-  --region us-west-2 \
-  --create-bucket-configuration LocationConstraint=us-west-2
-```
-
-### 3. Criação de usuário IAM com acesso ao S3
-
-```bash
-aws iam create-user --user-name awsS3user
-
-aws iam attach-user-policy \
-  --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess \
-  --user-name awsS3user
-```
-
-### 4. Ativação de hospedagem estática
-
-```bash
-aws s3 website s3://luis-alexandre-cafe-2026/ --index-document index.html
-```
-
-### 5. Upload dos arquivos com permissão pública
-
-```bash
-aws s3 cp /home/ec2-user/sysops-activity-files/static-website/ \
-  s3://luis-alexandre-cafe-2026/ \
-  --recursive \
-  --acl public-read
-```
-
-### 6. Script de deploy automatizado
-
-```bash
-#!/bin/bash
-aws s3 sync /home/ec2-user/sysops-activity-files/static-website/ \
-  s3://luis-alexandre-cafe-2026/ \
-  --acl public-read
-```
-
-> O `aws s3 sync` substitui o `aws s3 cp` — envia **somente os arquivos modificados**, tornando o deploy mais rápido e econômico.
+- **Computação:** Amazon EC2 (Família T3).
+- **Imagens:** Amazon Linux 2 (HVM).
+- **Automação:** Shell Scripting (Bash) & AWS CLI.
+- **Configuração:** AWS Systems Manager (Parameter Store) para busca dinâmica de AMIs.
 
 ---
 
-## Estrutura do repositório
+## 🚀 Implementação e Resultados
 
-```
-aws-s3-static-website-deployment/
-│
-├── scripts/
-│   └── update-website.sh       # script de deploy
-│
-├── screenshots/
-│   ├── s3-bucket-created.png
-│   ├── static-hosting-enabled.png
-│   ├── cli-upload.png
-│   ├── website-live.png
-│   └── architecture-diagram.png
-│
-└── README.md
-```
+### 1. Automação via CLI
 
----
+Utilizei scripts para recuperar dinamicamente os IDs de sub-rede, grupos de segurança e a última imagem disponível (AMI) para garantir que a infraestrutura seja sempre atualizada e repetível.
 
-## Resultado
+![Terminal CLI](./screenshots/03-cli-automation-terminal.png)
+_Execução do script de provisionamento através do Bastion Host._
 
-Site publicado e acessível publicamente:
+### 2. Gestão de Instâncias
 
-```
-http://luis-alexandre-cafe-2026.s3-website-us-west-2.amazonaws.com
-```
+O resultado final no Console da AWS apresenta uma infraestrutura organizada e devidamente etiquetada (Tags), facilitando a gestão de custos e recursos.
+
+![Console EC2](./screenshots/02-ec2-console-dashboard.png)
+
+### 3. Aplicação em Produção
+
+O servidor web provisionado via CLI instala automaticamente o Apache e realiza o deploy de uma aplicação de Dashboard funcional.
+
+![Aplicação Final](./screenshots/04-web-application-success.png)
 
 ---
 
-## Screenshots
+## 🔍 Troubleshooting (Habilidades Resolutivas)
 
-### Bucket criado no S3
+Durante o laboratório, foram simulados cenários de erro propositais para testar habilidades de diagnóstico:
 
-![bucket](./screenshots/s3-bucket-created.png)
-
-> Bucket `luis-alexandre-cafe-2026` criado via CLI na região us-west-2 (Oregon).
-
----
-
-### Hospedagem estática ativada
-
-![hosting](./screenshots/static-hosting-enabled.png)
-
-> Painel do S3 confirmando a hospedagem estática habilitada e o endpoint público gerado.
+- **Problema de Conectividade:** Identificação de falta de regra SSH (porta 22) no Security Group.
+- **Falha no Servidor Web:** Verificação de porta 80 bloqueada e status do serviço `httpd` via terminal.
 
 ---
 
-### Upload via CLI em execução
+## 📂 Estrutura do Repositório
 
-![cli](./screenshots/cli-upload.png)
-
-> Terminal SSH no Session Manager exibindo o upload recursivo dos arquivos do site para o bucket S3.
-
----
-
-### Site no ar
-
-![site](./screenshots/website-live.png)
-
-> Página do Café & Bakery acessível publicamente via endpoint S3.
+- `/scripts`: Contém os scripts `.sh` de automação e testes de SSM.
+- `/diagrams`: Desenho técnico da arquitetura.
+- `/screenshots`: Evidências de execução e funcionamento do projeto.
 
 ---
 
-## O que aprendi na prática
+## ✍️ Autor
 
-- Operar a AWS sem depender do console gráfico — só CLI
-- Criar e gerenciar usuários IAM com políticas específicas por serviço
-- Configurar hospedagem estática no S3 e entender o fluxo de permissões públicas (ACL)
-- Automatizar deploys com Bash e entender a diferença real entre `cp` e `sync`
-- Usar o Session Manager para acessar EC2 sem chave SSH
-
----
-
-## Autor
-
-**Luís Fernando Alexandre dos Santos**  
-Desenvolvedor | Estudante de Cloud Computing
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Conectar-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/luisfernando-eng)
-[![GitHub](https://img.shields.io/badge/GitHub-Seguir-181717?style=flat-square&logo=github)](https://github.com/luisFernandoJv)
-
----
-
-> _Projeto desenvolvido como parte de um laboratório prático AWS SysOps, simulando um pipeline real de deploy em nuvem._
+\*\*Luis Fernando Alexandre dos Santos
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Perfil-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/luisfernando-eng)
