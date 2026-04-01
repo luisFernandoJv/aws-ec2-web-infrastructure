@@ -77,5 +77,6 @@ Durante o laboratório, foram simulados cenários de erro propositais para testa
 
 ## ✍️ Autor
 
-\*\*Luis Fernando Alexandre dos Santos
+**Luis Fernando Alexandre dos Santos**
+
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Perfil-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/luisfernando-eng)
