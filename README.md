@@ -1,77 +1,81 @@
-# AWS Infrastructure: EC2 Bastion Host & CLI Automation 🚀
+# AWS Infrastructure: EC2 Web Server & Networking Architecture 🚀
 
 [![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
 [![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://www.linux.org/)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-E94333?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com/)
 
-Este projeto demonstra o provisionamento de uma arquitetura de rede segura na AWS, utilizando uma instância **Bastion Host** para gerenciar de forma segura o lançamento de um **Servidor Web** via **AWS CLI**.
+Este projeto demonstra a configuração de uma infraestrutura de rede completa na AWS, desde a criação de uma **VPC personalizada** até o deploy automatizado de um **Servidor Web Apache**, utilizando **Ubuntu Linux** como estação de gerenciamento local.
 
 ## 📌 Visão Geral
 
-A arquitetura foi desenhada para separar as responsabilidades de gerenciamento e entrega de aplicação. O Bastion Host atua como o ponto de entrada administrativo, permitindo automação programática dentro do ambiente cloud sem expor diretamente as APIs de controle à internet aberta.
+O objetivo principal foi isolar recursos em uma rede própria (**VPC-Desafio**), garantindo que o servidor web fosse configurado automaticamente no primeiro boot através de **User Data Scripts**, eliminando a necessidade de configuração manual pós-lançamento.
 
 ### 🎯 Objetivos Concluídos
 
-- **Provisionamento Híbrido:** Uso do AWS Management Console (Manual) e AWS CLI (Automatizado).
-- **Segurança de Rede:** Configuração de VPC, Subnets Públicas e Grupos de Segurança específicos.
-- **Gestão de Identidade:** Utilização de instâncias com perfis IAM (Roles) para acesso seguro a serviços AWS (Systems Manager).
-- **Automação de Boot:** Uso de **User Data Scripts** para instalação e configuração automática do Apache (httpd).
+- **Infraestrutura de Rede:** Criação de VPC, Subnets Públicas, Internet Gateway e Tabelas de Rotas.
+- **Automação de Boot:** Implementação de scripts Shell para instalação automática do Apache (httpd).
+- **Segurança:** Configuração de Security Groups específicos para tráfego HTTP (80) e SSH (22).
+- **Gerenciamento CLI:** Utilização da AWS CLI v2 para interação programática com o ambiente Cloud.
 
 ---
 
 ## 🏗️ Arquitetura do Projeto
 
-Abaixo, o diagrama que representa a topologia da rede e o fluxo de lançamento das instâncias:
+Abaixo, o diagrama técnico representando a topologia da rede e o fluxo de comunicação entre os componentes:
 
-![Diagrama de Arquitetura](./diagrams/01-architecture-diagram.png)
+![Diagrama de Arquitetura](./diagrams/diagrama%20de%20ação.png)
 
 ---
 
 ## 🛠️ Tecnologias e Ferramentas
 
-- **Computação:** Amazon EC2 (Família T3).
-- **Imagens:** Amazon Linux 2 (HVM).
-- **Automação:** Shell Scripting (Bash) & AWS CLI.
-- **Configuração:** AWS Systems Manager (Parameter Store) para busca dinâmica de AMIs.
+- **Cloud:** Amazon Web Services (AWS).
+- **Computação:** instâncias EC2 (Família T3).
+- **Servidor Web:** Apache HTTP Server.
+- **S.O. Local:** Ubuntu Linux via Terminal.
+- **Scripting:** Bash (Shell Script).
 
 ---
 
-## 🚀 Implementação e Resultados
+## 🚀 Implementação e Evidências
 
-### 1. Automação via CLI
+### 1. Mapa de Recursos (VPC)
 
-Utilizei scripts para recuperar dinamicamente os IDs de sub-rede, grupos de segurança e a última imagem disponível (AMI) para garantir que a infraestrutura seja sempre atualizada e repetível.
+Configuração visual da rede demonstrando a sub-rede pública devidamente roteada.
+![Mapa de Recursos](./screenshots/01-vpc-resource-map.png)
 
-![Terminal CLI](./screenshots/03-cli-automation-terminal.png)
-_Execução do script de provisionamento através do Bastion Host._
+### 2. Conectividade e Rotas
 
-### 2. Gestão de Instâncias
+Validação das tabelas de rotas e do Internet Gateway anexado para permitir acesso externo.
+![Tabelas de Rotas](./screenshots/02-tabelas-de-rotas.png)
 
-O resultado final no Console da AWS apresenta uma infraestrutura organizada e devidamente etiquetada (Tags), facilitando a gestão de custos e recursos.
+### 3. Automação (User Data)
 
-![Console EC2](./screenshots/02-ec2-console-dashboard.png)
+Logs de sistema que comprovam a execução do script de instalação automática durante a inicialização da instância.
+![Log do Sistema](./screenshots/05-system-log-httpd-success.png)
 
-### 3. Aplicação em Produção
+### 4. Resultado Final
 
-O servidor web provisionado via CLI instala automaticamente o Apache e realiza o deploy de uma aplicação de Dashboard funcional.
-
-![Aplicação Final](./screenshots/04-web-application-success.png)
+Servidor web online e renderizando a página HTML personalizada com sucesso.
+![Aplicação Final](./screenshots/06-web-page-result.png)
 
 ---
 
-## 🔍 Troubleshooting (Habilidades Resolutivas)
+## 🔍 Troubleshooting & Aprendizados
 
-Durante o laboratório, foram simulados cenários de erro propositais para testar habilidades de diagnóstico:
+Durante o desenvolvimento, foram aplicadas técnicas de diagnóstico para garantir a integridade do ambiente:
 
-- **Problema de Conectividade:** Identificação de falta de regra SSH (porta 22) no Security Group.
-- **Falha no Servidor Web:** Verificação de porta 80 bloqueada e status do serviço `httpd` via terminal.
+- **Diagnóstico de Rede:** Verificação de regras de entrada no Security Group para liberar tráfego web.
+- **Permissões Linux:** Ajuste de propriedade do diretório `/var/www/html` para permitir manipulação de arquivos pelo usuário padrão.
+- **Gestão de Chaves:** Uso de `chmod 400` para proteção de chaves PEM no ambiente Linux local.
 
 ---
 
 ## 📂 Estrutura do Repositório
 
-- `/scripts`: Contém os scripts `.sh` de automação e testes de SSM.
-- `/diagrams`: Desenho técnico da arquitetura.
-- `/screenshots`: Evidências de execução e funcionamento do projeto.
+- `/diagrams`: Desenhos técnicos da arquitetura.
+- `/screenshots`: Registros visuais das etapas concluídas.
+- `/scripts`: Script para testes de SSM e automação.
 
 ---
 
@@ -79,4 +83,4 @@ Durante o laboratório, foram simulados cenários de erro propositais para testa
 
 **Luis Fernando Alexandre dos Santos**
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Perfil-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/luisfernando-eng)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Perfil-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/luisfernando-eng/)
